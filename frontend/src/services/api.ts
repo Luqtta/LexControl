@@ -44,6 +44,16 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as any;
 
+    // Auth endpoints handle their own errors. A 401 from login/register/refresh/logout
+    // is a credential/session failure that the caller must surface — it must NOT trigger
+    // the silent refresh + redirect flow. Otherwise a wrong password cascades
+    // (login 401 -> refresh 401 -> logout 401) and deadlocks on the shared refresh
+    // promise, freezing the page with no error shown.
+    const requestUrl: string = originalRequest?.url ?? '';
+    if (/\/auth\/(login|register|refresh|logout)/.test(requestUrl)) {
+      return Promise.reject(error);
+    }
+
     // Only retry once to prevent infinite loops
     if (
       error.response?.status === 401 &&

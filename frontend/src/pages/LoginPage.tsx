@@ -22,10 +22,12 @@ export default function LoginPage() {
       await login(email, password);
       navigate('/dashboard');
     } catch (err) {
-      // Handle specific error cases
-      if (ApiErrorHandler.isRateLimited(err)) {
+      // authService unwraps Axios errors into a plain Error carrying `.code`, so detect
+      // by that code first and fall back to the Axios-based checks.
+      const code = (err as { code?: string })?.code ?? ApiErrorHandler.getErrorCode(err);
+      if (code === 'TOO_MANY_REQUESTS' || ApiErrorHandler.isRateLimited(err)) {
         setError(t('auth.tooManyAttempts') || 'Too many login attempts. Please try again later.');
-      } else if (ApiErrorHandler.isAuthError(err)) {
+      } else if (code === 'INVALID_CREDENTIALS' || ApiErrorHandler.isAuthError(err)) {
         setError(t('auth.invalid') || 'Invalid email or password.');
       } else {
         // Generic error message from error handler
