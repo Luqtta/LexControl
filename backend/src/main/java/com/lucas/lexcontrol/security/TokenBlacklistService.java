@@ -1,17 +1,22 @@
 package com.lucas.lexcontrol.security;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import jakarta.enterprise.context.ApplicationScoped;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.time.Instant;
 
 /**
  * Service to manage JWT token blacklist for logout functionality.
- * Tokens are stored with their expiration time and automatically removed after expiration.
+ * Tokens are stored with their expiration time and automatically evicted by Caffeine
+ * (24h after write, capped at 10k entries); no manual sweeping is required.
  */
 @ApplicationScoped
 public class TokenBlacklistService {
-    private final Map<String, Long> blacklist = new ConcurrentHashMap<>();
+    private final Cache<String, Long> blacklist = Caffeine.newBuilder()
+            .expireAfterWrite(24, TimeUnit.HOURS)
+            .maximumSize(10_000)
+            .build();
 
     /**
      * Add a token to the blacklist with its expiration time
@@ -20,8 +25,6 @@ public class TokenBlacklistService {
      */
     public void blacklistToken(String token, long expiresAt) {
         blacklist.put(token, expiresAt);
-        // Clean up expired entries periodically
-        cleanupExpiredTokens();
     }
 
     /**
@@ -30,7 +33,7 @@ public class TokenBlacklistService {
      * @return true if token is blacklisted and not yet expired
      */
     public boolean isBlacklisted(String token) {
-        Long expiresAt = blacklist.get(token);
+        Long expiresAt = blacklist.getIfPresent(token);
         if (expiresAt == null) {
             return false;
         }
@@ -38,7 +41,7 @@ public class TokenBlacklistService {
         // Check if token is still valid (not yet expired)
         long currentTime = Instant.now().getEpochSecond();
         if (currentTime > expiresAt) {
-            blacklist.remove(token);
+            blacklist.invalidate(token);
             return false;
         }
 
@@ -46,24 +49,24 @@ public class TokenBlacklistService {
     }
 
     /**
-     * Remove all expired tokens from the blacklist
+     * Run Caffeine's maintenance to evict expired entries. Eviction is automatic, but a
+     * scheduled call ({@code TokenCleanupScheduler}) forces pending cleanup promptly.
      */
-    private void cleanupExpiredTokens() {
-        long currentTime = Instant.now().getEpochSecond();
-        blacklist.entrySet().removeIf(entry -> entry.getValue() < currentTime);
+    public void purgeExpired() {
+        blacklist.cleanUp();
     }
 
     /**
      * Clear all tokens from blacklist (for testing purposes)
      */
     public void clearAll() {
-        blacklist.clear();
+        blacklist.invalidateAll();
     }
 
     /**
      * Get the size of the blacklist
      */
     public int size() {
-        return blacklist.size();
+        return (int) blacklist.estimatedSize();
     }
 }

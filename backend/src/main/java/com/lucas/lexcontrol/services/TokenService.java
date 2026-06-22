@@ -1,14 +1,15 @@
 package com.lucas.lexcontrol.services;
 
 import com.lucas.lexcontrol.entities.User;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import io.smallrye.jwt.build.Jwt;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.time.Instant;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.Set;
 
 /**
@@ -25,8 +26,13 @@ public class TokenService {
     @ConfigProperty(name = "jwt.refresh.expiration")
     long refreshTokenExpiration;
 
-    // Simple in-memory storage for refresh tokens (consider using a database for production)
-    private final Map<String, RefreshTokenData> refreshTokens = new ConcurrentHashMap<>();
+    // In-memory storage for refresh tokens, bounded and auto-evicting via Caffeine.
+    // Entries expire 7 days after write (matching refresh token TTL) and the cache is
+    // capped at 10k entries. A scheduled sweep (TokenCleanupScheduler) is a backstop.
+    private final Cache<String, RefreshTokenData> refreshTokens = Caffeine.newBuilder()
+            .expireAfterWrite(7, TimeUnit.DAYS)
+            .maximumSize(10_000)
+            .build();
 
     /**
      * Generate both access token and refresh token for a user
@@ -62,7 +68,7 @@ public class TokenService {
         }
 
         // Revoke old refresh token
-        refreshTokens.remove(refreshToken);
+        refreshTokens.invalidate(refreshToken);
 
         // Generate new tokens
         return generateTokens(user);
@@ -72,7 +78,7 @@ public class TokenService {
      * Validate refresh token
      */
     public boolean isValidRefreshToken(String refreshToken, UUID userId) {
-        RefreshTokenData data = refreshTokens.get(refreshToken);
+        RefreshTokenData data = refreshTokens.getIfPresent(refreshToken);
         if (data == null) {
             return false;
         }
@@ -80,7 +86,7 @@ public class TokenService {
         // Check if token is expired
         long currentTime = Instant.now().getEpochSecond();
         if (currentTime > data.expiresAt) {
-            refreshTokens.remove(refreshToken);
+            refreshTokens.invalidate(refreshToken);
             return false;
         }
 
@@ -92,13 +98,13 @@ public class TokenService {
      * Validate refresh token and return the associated userId
      */
     public java.util.Optional<UUID> getUserIdFromRefreshToken(String refreshToken) {
-        RefreshTokenData data = refreshTokens.get(refreshToken);
+        RefreshTokenData data = refreshTokens.getIfPresent(refreshToken);
         if (data == null) {
             return java.util.Optional.empty();
         }
         long currentTime = Instant.now().getEpochSecond();
         if (currentTime > data.expiresAt) {
-            refreshTokens.remove(refreshToken);
+            refreshTokens.invalidate(refreshToken);
             return java.util.Optional.empty();
         }
         return java.util.Optional.of(data.userId);
@@ -108,14 +114,25 @@ public class TokenService {
      * Revoke a refresh token
      */
     public void revokeRefreshToken(String refreshToken) {
-        refreshTokens.remove(refreshToken);
+        refreshTokens.invalidate(refreshToken);
     }
 
     /**
      * Revoke all refresh tokens for a user (logout from all devices)
      */
     public void revokeAllUserTokens(UUID userId) {
-        refreshTokens.entrySet().removeIf(entry -> entry.getValue().userId.equals(userId));
+        refreshTokens.asMap().values().removeIf(data -> data.userId.equals(userId));
+    }
+
+    /**
+     * Backstop sweep for logically-expired refresh tokens. Caffeine already evicts
+     * entries 7 days after write, but this runs Caffeine's maintenance and drops any
+     * token already past its own expiry. Invoked by {@code TokenCleanupScheduler}.
+     */
+    public void purgeExpired() {
+        long now = Instant.now().getEpochSecond();
+        refreshTokens.asMap().values().removeIf(data -> now > data.expiresAt);
+        refreshTokens.cleanUp();
     }
 
     private String generateAccessToken(User user) {

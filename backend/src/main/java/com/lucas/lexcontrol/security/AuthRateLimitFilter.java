@@ -1,10 +1,11 @@
 package com.lucas.lexcontrol.security;
 
 import java.time.Instant;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.lucas.lexcontrol.common.ApiError;
 import com.lucas.lexcontrol.common.ApiErrorCode;
 
@@ -22,7 +23,12 @@ public class AuthRateLimitFilter implements ContainerRequestFilter {
     private static final int LIMIT = 10;
     private static final long WINDOW_MS = 60_000;
 
-    private final Map<String, Attempt> attempts = new ConcurrentHashMap<>();
+    // Bounded, self-evicting store of per-client attempt windows. Entries expire 1 hour
+    // after write so idle client keys never accumulate, and the cache is capped at 5k keys.
+    private final Cache<String, Attempt> attempts = Caffeine.newBuilder()
+            .expireAfterWrite(1, TimeUnit.HOURS)
+            .maximumSize(5_000)
+            .build();
 
     @Override
     public void filter(ContainerRequestContext requestContext) {
@@ -32,7 +38,7 @@ public class AuthRateLimitFilter implements ContainerRequestFilter {
         }
 
         String key = resolveClientKey(requestContext);
-        Attempt attempt = attempts.computeIfAbsent(key, k -> new Attempt());
+        Attempt attempt = attempts.get(key, k -> new Attempt());
         if (attempt.incrementAndCheck()) {
             ApiError error = new ApiError(
                     Instant.now().toString(),

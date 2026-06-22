@@ -13,6 +13,7 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -39,9 +40,11 @@ public class TransactionController {
             @QueryParam("clientId") UUID clientId,
             @QueryParam("from") LocalDate from,
             @QueryParam("to") LocalDate to,
-            @QueryParam("sort") String sort
+            @QueryParam("sort") String sort,
+            @QueryParam("page") @DefaultValue("0") int page,
+            @QueryParam("size") @DefaultValue("20") int size
     ) {
-        return transactionService.list(type, clientId, from, to, sort);
+        return transactionService.list(type, clientId, from, to, sort, page, size);
     }
 
     @POST

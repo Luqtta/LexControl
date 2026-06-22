@@ -9,6 +9,7 @@ import java.util.UUID;
 import com.lucas.lexcontrol.entities.Client;
 
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -20,7 +21,8 @@ public class ClientRepository implements PanacheRepository<Client> {
                 Map.of("id", id, "userId", userId)).firstResultOptional();
     }
 
-    public List<Client> listByUser(UUID userId, String search, String status, String sort) {
+    public List<Client> listByUser(UUID userId, String search, String status, String sort,
+            int page, int size) {
         StringBuilder query = new StringBuilder("user.id = :userId");
         Map<String, Object> params = new HashMap<>();
         params.put("userId", userId);
@@ -39,7 +41,9 @@ public class ClientRepository implements PanacheRepository<Client> {
         }
 
         Sort sortClause = parseSort(sort);
-        return find(query.toString(), sortClause, params).list();
+        return find(query.toString(), sortClause, params)
+                .page(Page.of(page, size))
+                .list();
     }
 
     private Sort parseSort(String sort) {

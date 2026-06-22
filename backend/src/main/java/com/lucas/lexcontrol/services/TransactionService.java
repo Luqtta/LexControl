@@ -36,12 +36,25 @@ public class TransactionService {
     @Inject
     InputSanitizer sanitizer;
 
-    public List<TransactionResponse> list(TransactionType type, UUID clientId, LocalDate from, LocalDate to, String sort) {
+    private static final int MAX_PAGE_SIZE = 100;
+    private static final int DEFAULT_PAGE_SIZE = 20;
+
+    public List<TransactionResponse> list(TransactionType type, UUID clientId, LocalDate from, LocalDate to,
+            String sort, int page, int size) {
         UUID userId = currentUser.getUserId();
-        return transactionRepository.listByUser(userId, type, clientId, from, to, sort)
+        int safePage = Math.max(page, 0);
+        int safeSize = clampSize(size);
+        return transactionRepository.listByUser(userId, type, clientId, from, to, sort, safePage, safeSize)
                 .stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    private int clampSize(int size) {
+        if (size <= 0) {
+            return DEFAULT_PAGE_SIZE;
+        }
+        return Math.min(size, MAX_PAGE_SIZE);
     }
 
     @Transactional

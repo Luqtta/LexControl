@@ -11,6 +11,7 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -35,9 +36,11 @@ public class ClientController {
     public List<ClientResponse> list(
             @QueryParam("search") String search,
             @QueryParam("status") String status,
-            @QueryParam("sort") String sort
+            @QueryParam("sort") String sort,
+            @QueryParam("page") @DefaultValue("0") int page,
+            @QueryParam("size") @DefaultValue("20") int size
     ) {
-        return clientService.list(search, status, sort);
+        return clientService.list(search, status, sort, page, size);
     }
 
     @POST

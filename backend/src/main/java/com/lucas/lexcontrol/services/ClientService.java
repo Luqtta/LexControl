@@ -34,12 +34,24 @@ public class ClientService {
     @Inject
     InputSanitizer sanitizer;
 
-    public List<ClientResponse> list(String search, String status, String sort) {
+    private static final int MAX_PAGE_SIZE = 100;
+    private static final int DEFAULT_PAGE_SIZE = 20;
+
+    public List<ClientResponse> list(String search, String status, String sort, int page, int size) {
         UUID userId = currentUser.getUserId();
-        return clientRepository.listByUser(userId, search, status, sort)
+        int safePage = Math.max(page, 0);
+        int safeSize = clampSize(size);
+        return clientRepository.listByUser(userId, search, status, sort, safePage, safeSize)
                 .stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    private int clampSize(int size) {
+        if (size <= 0) {
+            return DEFAULT_PAGE_SIZE;
+        }
+        return Math.min(size, MAX_PAGE_SIZE);
     }
 
     public ClientResponse get(UUID id) {
