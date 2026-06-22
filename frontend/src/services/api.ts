@@ -23,12 +23,10 @@ export function setRefreshCallback(callback: () => Promise<string | null>) {
   api.refreshTokenCallback = callback;
 }
 
-// Extend axios interface to add callback
-declare global {
-  namespace Express {
-    interface Application {
-      refreshTokenCallback?: () => Promise<string | null>;
-    }
+// Augment the axios instance type so the refresh callback can be stored on it.
+declare module 'axios' {
+  interface AxiosInstance {
+    refreshTokenCallback?: (() => Promise<string | null>) | null;
   }
 }
 

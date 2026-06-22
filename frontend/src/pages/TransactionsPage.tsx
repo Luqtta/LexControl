@@ -8,7 +8,7 @@ import { formatCurrency, formatDate } from '../utils/format';
 import { useI18n } from '../contexts/I18nContext';
 
 const emptyForm = {
-  type: 'INCOME' as const,
+  type: 'INCOME' as 'INCOME' | 'EXPENSE',
   amount: '' as unknown as number,
   date: new Date().toISOString().slice(0, 10),
   description: '',
