@@ -14,8 +14,14 @@ export async function listClients(params?: {
   search?: string;
   status?: string;
   sort?: string;
+  page?: number;
+  size?: number;
 }): Promise<Client[]> {
-  const { data } = await api.get<Client[]>('/clients', { params });
+  // Default to the first page with a large size so the current "show everything"
+  // behaviour is preserved until visual pagination is implemented. Backend caps size at 100.
+  const { data } = await api.get<Client[]>('/clients', {
+    params: { page: 0, size: 100, ...params }
+  });
   return data;
 }
 

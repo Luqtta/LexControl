@@ -15,8 +15,14 @@ export async function listTransactions(params?: {
   from?: string;
   to?: string;
   sort?: string;
+  page?: number;
+  size?: number;
 }): Promise<Transaction[]> {
-  const { data } = await api.get<Transaction[]>('/transactions', { params });
+  // Default to the first page with a large size so the current "show everything"
+  // behaviour is preserved until visual pagination is implemented. Backend caps size at 100.
+  const { data } = await api.get<Transaction[]>('/transactions', {
+    params: { page: 0, size: 100, ...params }
+  });
   return data;
 }
 
