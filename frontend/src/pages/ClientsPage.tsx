@@ -4,6 +4,7 @@ import type { Client } from '../types';
 import { createClient, deleteClient, listClients, updateClient, type ClientPayload } from '../services/clients';
 import { createTransaction } from '../services/transactions';
 import Modal from '../components/Modal';
+import MoneyInput from '../components/MoneyInput';
 import { formatCurrency } from '../utils/format';
 import { useI18n } from '../contexts/I18nContext';
 
@@ -127,6 +128,19 @@ export default function ClientsPage() {
     });
   };
 
+  // One-click "a receber" -> "recebido": books the full pending amount as income.
+  const receiveFull = (client: Client) => {
+    if (client.valorPendente <= 0 || paymentMutation.isPending) return;
+    if (!window.confirm(t('clients.confirmReceive'))) return;
+    paymentMutation.mutate({
+      type: 'INCOME',
+      amount: client.valorPendente,
+      date: new Date().toISOString().slice(0, 10),
+      description: t('clients.receive'),
+      clientId: client.id
+    });
+  };
+
   const tableRows = useMemo(() => data, [data]);
 
   return (
@@ -192,7 +206,19 @@ export default function ClientsPage() {
                   </td>
                   <td className="px-5 py-4 text-ink-900">{formatCurrency(client.totalHonorarios)}</td>
                   <td className="px-5 py-4 text-ink-900">{formatCurrency(client.valorRecebido)}</td>
-                  <td className="px-5 py-4 text-ink-900">{formatCurrency(client.valorPendente)}</td>
+                  <td className="px-5 py-4">
+                    {client.valorPendente > 0 ? (
+                      <button
+                        className="btn btn-ghost text-amber-700"
+                        onClick={() => receiveFull(client)}
+                        title={t('clients.receive')}
+                      >
+                        {formatCurrency(client.valorPendente)} →
+                      </button>
+                    ) : (
+                      <span className="text-emerald-600">{formatCurrency(0)}</span>
+                    )}
+                  </td>
                   <td className="px-5 py-4">
                     <div className="flex flex-wrap gap-2">
                       <button className="btn btn-ghost" onClick={() => openEdit(client)}>
@@ -242,51 +268,35 @@ export default function ClientsPage() {
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="label">{t('clients.form.totalHonorarios')}</label>
-              <input
+              <MoneyInput
                 className="input mt-2"
-                type="number"
-                min="0"
-                step="0.01"
                 value={formData.totalHonorarios}
-                onChange={(event) => setFormData({ ...formData, totalHonorarios: Number(event.target.value) })}
+                onChange={(value) => setFormData({ ...formData, totalHonorarios: value })}
                 required
               />
             </div>
             <div>
               <label className="label">{t('clients.form.valorRecebido')}</label>
-              <input
+              <MoneyInput
                 className="input mt-2"
-                type="number"
-                min="0"
-                step="0.01"
                 value={formData.valorRecebido ?? 0}
-                onChange={(event) => setFormData({ ...formData, valorRecebido: Number(event.target.value) })}
+                onChange={(value) => setFormData({ ...formData, valorRecebido: value })}
               />
             </div>
             <div>
               <label className="label">{t('clients.form.previstoSentenca')}</label>
-              <input
+              <MoneyInput
                 className="input mt-2"
-                type="number"
-                min="0"
-                step="0.01"
                 value={formData.valorPrevistoSentenca ?? 0}
-                onChange={(event) =>
-                  setFormData({ ...formData, valorPrevistoSentenca: Number(event.target.value) })
-                }
+                onChange={(value) => setFormData({ ...formData, valorPrevistoSentenca: value })}
               />
             </div>
             <div>
               <label className="label">{t('clients.form.pagoSentenca')}</label>
-              <input
+              <MoneyInput
                 className="input mt-2"
-                type="number"
-                min="0"
-                step="0.01"
                 value={formData.valorPagoSentenca ?? 0}
-                onChange={(event) =>
-                  setFormData({ ...formData, valorPagoSentenca: Number(event.target.value) })
-                }
+                onChange={(value) => setFormData({ ...formData, valorPagoSentenca: value })}
               />
             </div>
           </div>
@@ -309,14 +319,7 @@ export default function ClientsPage() {
         <div className="space-y-4">
           <div>
             <label className="label">{t('clients.payment.amount')}</label>
-            <input
-              className="input mt-2"
-              type="number"
-              min="0"
-              step="0.01"
-              value={paymentAmount}
-              onChange={(event) => setPaymentAmount(Number(event.target.value))}
-            />
+            <MoneyInput className="input mt-2" value={paymentAmount} onChange={setPaymentAmount} />
           </div>
           <div>
             <label className="label">{t('clients.payment.date')}</label>

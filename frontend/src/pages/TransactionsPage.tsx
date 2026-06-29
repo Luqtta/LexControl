@@ -4,6 +4,7 @@ import { listTransactions, createTransaction, deleteTransaction, updateTransacti
 import { listClients } from '../services/clients';
 import type { Transaction } from '../types';
 import Modal from '../components/Modal';
+import MoneyInput from '../components/MoneyInput';
 import { formatCurrency, formatDate } from '../utils/format';
 import { useI18n } from '../contexts/I18nContext';
 
@@ -206,14 +207,11 @@ export default function TransactionsPage() {
           </div>
           <div>
             <label className="label">{t('transactions.form.amount')}</label>
-            <input
+            <MoneyInput
               className="input mt-2"
-              type="number"
-              min="0.01"
-              step="0.01"
               required
               value={formData.amount}
-              onChange={(event) => setFormData({ ...formData, amount: Number(event.target.value) })}
+              onChange={(value) => setFormData({ ...formData, amount: value })}
             />
           </div>
           <div>
