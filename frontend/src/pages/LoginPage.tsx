@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { ApiErrorHandler } from '../utils/errorHandler';
+import AuthShell from '../components/AuthShell';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -30,7 +31,6 @@ export default function LoginPage() {
       } else if (code === 'INVALID_CREDENTIALS' || ApiErrorHandler.isAuthError(err)) {
         setError(t('auth.invalid') || 'Invalid email or password.');
       } else {
-        // Generic error message from error handler
         setError(ApiErrorHandler.getErrorMessage(err));
       }
     } finally {
@@ -39,12 +39,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="card w-full max-w-md p-8 animate-fade-up">
-        <h1 className="text-3xl font-display text-ink-900">{t('auth.welcome')}</h1>
-        <p className="text-sm text-slate-400 mt-2">{t('auth.welcomeSubtitle')}</p>
+    <AuthShell>
+      <div className="card p-8">
+        <h1 className="text-3xl font-display text-ink-900 tracking-tight">{t('auth.welcome')}</h1>
+        <p className="text-sm text-slate-500 mt-2">{t('auth.welcomeSubtitle')}</p>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-7 space-y-4">
           <div>
             <label className="label">{t('auth.email')}</label>
             <input
@@ -60,7 +60,7 @@ export default function LoginPage() {
             <label className="label">{t('auth.password')}</label>
             <div className="relative mt-2">
               <input
-                className="input pr-20"
+                className="input pr-16"
                 type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
@@ -69,7 +69,7 @@ export default function LoginPage() {
               />
               <button
                 type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-ink-900 disabled:opacity-50"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-brand-600 hover:text-brand-700 disabled:opacity-50"
                 onClick={() => setShowPassword((prev) => !prev)}
                 disabled={loading}
               >
@@ -79,23 +79,23 @@ export default function LoginPage() {
           </div>
 
           {error ? (
-            <div className="p-3 rounded bg-red-50 border border-red-200">
-              <p className="text-sm text-red-700">{error}</p>
+            <div className="rounded-xl border border-coral-500/30 bg-coral-50 p-3">
+              <p className="text-sm text-coral-600">{error}</p>
             </div>
           ) : null}
 
-          <button className="btn btn-primary w-full" disabled={loading}>
+          <button className="btn btn-accent w-full" disabled={loading}>
             {loading ? t('auth.loginLoading') : t('auth.login')}
           </button>
         </form>
 
-        <p className="mt-6 text-sm text-slate-400">
+        <p className="mt-6 text-sm text-slate-500">
           {t('auth.noAccount')}{' '}
-          <Link className="text-ink-900 font-semibold" to="/register">
+          <Link className="font-semibold text-brand-600 hover:text-brand-700" to="/register">
             {t('auth.createOne')}
           </Link>
         </p>
       </div>
-    </div>
+    </AuthShell>
   );
 }

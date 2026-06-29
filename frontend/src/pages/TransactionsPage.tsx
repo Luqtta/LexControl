@@ -121,11 +121,11 @@ export default function TransactionsPage() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm uppercase tracking-[0.3em] text-slate-400">{t('transactions.title')}</p>
-          <h2 className="text-3xl font-display text-ink-900 mt-2">{t('transactions.subtitle')}</h2>
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{t('transactions.title')}</p>
+          <h2 className="text-3xl font-display text-ink-900 mt-2 tracking-tight">{t('transactions.subtitle')}</h2>
         </div>
-        <button className="btn btn-primary" onClick={openCreate}>
-          {t('transactions.new')}
+        <button className="btn btn-accent" onClick={openCreate}>
+          + {t('transactions.new')}
         </button>
       </div>
 
@@ -141,54 +141,67 @@ export default function TransactionsPage() {
 
       <div className="card overflow-hidden">
         {isLoading ? (
-          <div className="p-6">{t('transactions.loading')}</div>
+          <div className="divide-y divide-slate-100">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between px-5 py-5 animate-pulse">
+                <div className="h-4 w-28 rounded bg-slate-200" />
+                <div className="h-4 w-20 rounded bg-slate-200" />
+              </div>
+            ))}
+          </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-white/70 text-left">
-              <tr>
-                <th className="px-5 py-3 text-slate-400 uppercase tracking-[0.2em] text-xs">
-                  {t('transactions.header.type')}
-                </th>
-                <th className="px-5 py-3 text-slate-400 uppercase tracking-[0.2em] text-xs">
-                  {t('transactions.header.amount')}
-                </th>
-                <th className="px-5 py-3 text-slate-400 uppercase tracking-[0.2em] text-xs">
-                  {t('transactions.header.date')}
-                </th>
-                <th className="px-5 py-3 text-slate-400 uppercase tracking-[0.2em] text-xs">
-                  {t('transactions.header.client')}
-                </th>
-                <th className="px-5 py-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map((item) => (
-                <tr key={item.id} className="border-t border-white/60">
-                  <td className="px-5 py-4 font-semibold text-ink-900">{item.type}</td>
-                  <td className="px-5 py-4 text-ink-900">{formatCurrency(item.amount)}</td>
-                  <td className="px-5 py-4 text-ink-900">{formatDate(item.date)}</td>
-                  <td className="px-5 py-4 text-slate-400">{item.clientName || t('transactions.general')}</td>
-                  <td className="px-5 py-4">
-                    <div className="flex gap-2">
-                      <button className="btn btn-ghost" onClick={() => openEdit(item)}>
-                        {t('clients.edit')}
-                      </button>
-                      <button className="btn btn-ghost" onClick={() => deleteMutation.mutate(item.id)}>
-                        {t('clients.delete')}
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 text-left">
+                <tr className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+                  <th className="px-5 py-3.5 font-semibold">{t('transactions.header.type')}</th>
+                  <th className="px-5 py-3.5 font-semibold text-right">{t('transactions.header.amount')}</th>
+                  <th className="px-5 py-3.5 font-semibold">{t('transactions.header.date')}</th>
+                  <th className="px-5 py-3.5 font-semibold">{t('transactions.header.client')}</th>
+                  <th className="px-5 py-3.5"></th>
                 </tr>
-              ))}
-              {transactions.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-5 py-8 text-center text-slate-400">
-                    {t('transactions.empty')}
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {transactions.map((item) => {
+                  const income = item.type === 'INCOME';
+                  return (
+                    <tr key={item.id} className="border-t border-slate-100 transition hover:bg-slate-50/70">
+                      <td className="px-5 py-4">
+                        <span className={`pill ${income ? 'pill-income' : 'pill-expense'}`}>
+                          {income ? t('transactions.income') : t('transactions.expense')}
+                        </span>
+                      </td>
+                      <td className={`px-5 py-4 text-right tnum font-semibold ${income ? 'text-brand-600' : 'text-coral-600'}`}>
+                        {income ? '+' : '−'} {formatCurrency(item.amount)}
+                      </td>
+                      <td className="px-5 py-4 text-slate-500 tnum">{formatDate(item.date)}</td>
+                      <td className="px-5 py-4 text-slate-500">{item.clientName || t('transactions.general')}</td>
+                      <td className="px-5 py-4">
+                        <div className="flex justify-end gap-2">
+                          <button className="btn btn-ghost" onClick={() => openEdit(item)}>
+                            {t('clients.edit')}
+                          </button>
+                          <button className="btn btn-danger" onClick={() => deleteMutation.mutate(item.id)}>
+                            {t('clients.delete')}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {transactions.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-5 py-14 text-center">
+                      <p className="text-sm font-semibold text-ink-900">{t('transactions.empty')}</p>
+                      <button className="btn btn-accent mt-4" onClick={openCreate}>
+                        + {t('transactions.new')}
+                      </button>
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

@@ -3,46 +3,91 @@
 @tailwind utilities;
 
 :root {
-  color: #0c1116;
-  background: #e6edf5;
+  color-scheme: light;
+  color: #0d131c;
 }
 
 body {
   font-family: 'Manrope', sans-serif;
   min-height: 100vh;
+  color: #0d131c;
   background:
-    radial-gradient(1200px 600px at 10% -10%, rgba(18, 184, 134, 0.18), transparent 60%),
-    radial-gradient(900px 500px at 90% 0%, rgba(245, 184, 59, 0.18), transparent 55%),
-    #e6edf5;
+    radial-gradient(1100px 520px at 100% -8%, rgba(21, 155, 118, 0.10), transparent 60%),
+    radial-gradient(900px 480px at -10% 110%, rgba(13, 19, 28, 0.06), transparent 55%),
+    #f4f6f9;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Subtle grain so large flat surfaces don't read as sterile vector. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 #root {
+  position: relative;
+  z-index: 1;
   min-height: 100vh;
 }
 
 @layer components {
   .card {
-    @apply bg-white/80 backdrop-blur-xl rounded-2xl border border-white/40 shadow-lg;
+    @apply bg-white rounded-2xl border border-slate-200/70 shadow-card;
+  }
+  .card-interactive {
+    @apply transition duration-200 hover:-translate-y-0.5 hover:shadow-lift;
   }
   .card-header {
-    @apply text-sm uppercase tracking-[0.2em] text-slate-400 font-semibold;
+    @apply text-[11px] uppercase tracking-[0.22em] text-slate-400 font-semibold;
   }
   .card-value {
-    @apply text-2xl font-display text-ink-900;
+    @apply text-[28px] leading-none font-display text-ink-900 tracking-tight tabular-nums;
   }
+
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition duration-150
+      active:scale-[0.98] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ink-900/10 disabled:opacity-50 disabled:pointer-events-none;
   }
   .btn-primary {
-    @apply bg-ink-900 text-white hover:bg-ink-800;
+    @apply bg-ink-900 text-white hover:bg-ink-800 shadow-sm;
+  }
+  .btn-accent {
+    @apply bg-brand-500 text-white hover:bg-brand-600 shadow-glow focus-visible:ring-brand-500/25;
   }
   .btn-ghost {
-    @apply border border-ink-900/10 text-ink-900 hover:border-ink-900/30 hover:bg-white;
+    @apply border border-slate-200 bg-white text-ink-800 hover:border-slate-300 hover:bg-slate-50;
   }
+  .btn-danger {
+    @apply border border-transparent text-coral-600 hover:bg-coral-50;
+  }
+
   .input {
-    @apply w-full rounded-xl border border-slate-300/80 bg-white/70 px-3 py-2 text-sm text-ink-900 outline-none focus:border-ink-900/60 focus:ring-2 focus:ring-ink-900/10;
+    @apply w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-ink-900 placeholder:text-slate-400
+      outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10;
   }
   .label {
-    @apply text-xs font-semibold uppercase tracking-[0.2em] text-slate-400;
+    @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold;
+  }
+  .pill-income {
+    @apply bg-brand-50 text-brand-700;
+  }
+  .pill-expense {
+    @apply bg-coral-50 text-coral-600;
+  }
+}
+
+@layer utilities {
+  .tnum {
+    font-variant-numeric: tabular-nums;
   }
 }

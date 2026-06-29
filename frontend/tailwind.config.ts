@@ -5,25 +5,29 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Cool charcoal-navy: serious, "vault"-grade dark surfaces.
         ink: {
-          900: '#0c1116',
-          800: '#121923',
-          700: '#1b2633'
+          950: '#080b11',
+          900: '#0d131c',
+          800: '#141c28',
+          700: '#1f2a39',
+          600: '#33415380'
         },
-        slate: {
-          200: '#e6edf5',
-          300: '#d2dbe6',
-          400: '#a8b4c4'
+        // Single accent — desaturated emerald = money / growth / "go".
+        brand: {
+          50: '#e9f7f1',
+          100: '#cdeede',
+          300: '#7fd3b8',
+          400: '#3cbd97',
+          500: '#159b76',
+          600: '#0f7e60',
+          700: '#0c6650'
         },
-        mint: {
-          500: '#12b886',
-          600: '#0fa77a'
-        },
-        gold: {
-          500: '#f5b83b'
-        },
+        // Semantic only: expenses, destructive actions.
         coral: {
-          500: '#ef6f6c'
+          50: '#fdecec',
+          500: '#e2575f',
+          600: '#cf4750'
         }
       },
       fontFamily: {
@@ -31,7 +35,10 @@ export default {
         body: ['Manrope', 'sans-serif']
       },
       boxShadow: {
-        glow: '0 10px 30px rgba(18, 184, 134, 0.25)'
+        // Tinted, soft — single light source, hue-matched to the ink ground.
+        card: '0 1px 2px rgba(13,19,28,0.04), 0 14px 34px -16px rgba(13,19,28,0.18)',
+        lift: '0 1px 2px rgba(13,19,28,0.05), 0 24px 48px -20px rgba(13,19,28,0.30)',
+        glow: '0 16px 36px -16px rgba(21,155,118,0.55)'
       },
       keyframes: {
         fadeUp: {
@@ -44,7 +51,7 @@ export default {
         }
       },
       animation: {
-        'fade-up': 'fadeUp 0.6s ease-out',
+        'fade-up': 'fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
         'float-slow': 'floatSlow 6s ease-in-out infinite'
       }
     }

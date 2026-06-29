@@ -147,11 +147,11 @@ export default function ClientsPage() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm uppercase tracking-[0.3em] text-slate-400">{t('clients.title')}</p>
-          <h2 className="text-3xl font-display text-ink-900 mt-2">{t('clients.subtitle')}</h2>
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{t('clients.title')}</p>
+          <h2 className="text-3xl font-display text-ink-900 mt-2 tracking-tight">{t('clients.subtitle')}</h2>
         </div>
-        <button className="btn btn-primary" onClick={openCreate}>
-          {t('clients.new')}
+        <button className="btn btn-accent" onClick={openCreate}>
+          + {t('clients.new')}
         </button>
       </div>
 
@@ -177,72 +177,81 @@ export default function ClientsPage() {
 
       <div className="card overflow-hidden">
         {isLoading ? (
-          <div className="p-6">{t('clients.loading')}</div>
+          <div className="divide-y divide-slate-100">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between px-5 py-5 animate-pulse">
+                <div className="h-4 w-40 rounded bg-slate-200" />
+                <div className="h-4 w-24 rounded bg-slate-200" />
+              </div>
+            ))}
+          </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-white/70 text-left">
-              <tr>
-                <th className="px-5 py-3 text-slate-400 uppercase tracking-[0.2em] text-xs">
-                  {t('clients.header.client')}
-                </th>
-                <th className="px-5 py-3 text-slate-400 uppercase tracking-[0.2em] text-xs">
-                  {t('clients.header.honorarios')}
-                </th>
-                <th className="px-5 py-3 text-slate-400 uppercase tracking-[0.2em] text-xs">
-                  {t('clients.header.received')}
-                </th>
-                <th className="px-5 py-3 text-slate-400 uppercase tracking-[0.2em] text-xs">
-                  {t('clients.header.pending')}
-                </th>
-                <th className="px-5 py-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {tableRows.map((client) => (
-                <tr key={client.id} className="border-t border-white/60">
-                  <td className="px-5 py-4">
-                    <p className="font-semibold text-ink-900">{client.name}</p>
-                    <p className="text-xs text-slate-400">{client.description || t('clients.noDescription')}</p>
-                  </td>
-                  <td className="px-5 py-4 text-ink-900">{formatCurrency(client.totalHonorarios)}</td>
-                  <td className="px-5 py-4 text-ink-900">{formatCurrency(client.valorRecebido)}</td>
-                  <td className="px-5 py-4">
-                    {client.valorPendente > 0 ? (
-                      <button
-                        className="btn btn-ghost text-amber-700"
-                        onClick={() => receiveFull(client)}
-                        title={t('clients.receive')}
-                      >
-                        {formatCurrency(client.valorPendente)} →
-                      </button>
-                    ) : (
-                      <span className="text-emerald-600">{formatCurrency(0)}</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex flex-wrap gap-2">
-                      <button className="btn btn-ghost" onClick={() => openEdit(client)}>
-                        {t('clients.edit')}
-                      </button>
-                      <button className="btn btn-ghost" onClick={() => openPayment(client)}>
-                        {t('clients.addPayment')}
-                      </button>
-                      <button className="btn btn-ghost" onClick={() => deleteMutation.mutate(client.id)}>
-                        {t('clients.delete')}
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 text-left">
+                <tr className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+                  <th className="px-5 py-3.5 font-semibold">{t('clients.header.client')}</th>
+                  <th className="px-5 py-3.5 font-semibold text-right">{t('clients.header.honorarios')}</th>
+                  <th className="px-5 py-3.5 font-semibold text-right">{t('clients.header.received')}</th>
+                  <th className="px-5 py-3.5 font-semibold text-right">{t('clients.header.pending')}</th>
+                  <th className="px-5 py-3.5"></th>
                 </tr>
-              ))}
-              {tableRows.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-5 py-8 text-center text-slate-400">
-                    {t('clients.empty')}
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {tableRows.map((client) => (
+                  <tr key={client.id} className="border-t border-slate-100 transition hover:bg-slate-50/70">
+                    <td className="px-5 py-4">
+                      <p className="font-semibold text-ink-900">{client.name}</p>
+                      <p className="text-xs text-slate-400">{client.description || t('clients.noDescription')}</p>
+                    </td>
+                    <td className="px-5 py-4 text-right text-ink-900 tnum font-semibold">
+                      {formatCurrency(client.totalHonorarios)}
+                    </td>
+                    <td className="px-5 py-4 text-right text-brand-600 tnum font-semibold">
+                      {formatCurrency(client.valorRecebido)}
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      {client.valorPendente > 0 ? (
+                        <button
+                          className="pill pill-expense tnum transition hover:brightness-95 disabled:opacity-50"
+                          onClick={() => receiveFull(client)}
+                          disabled={paymentMutation.isPending}
+                          title={t('clients.receive')}
+                        >
+                          {formatCurrency(client.valorPendente)} →
+                        </button>
+                      ) : (
+                        <span className="pill pill-income">{t('clients.paid')}</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex flex-wrap justify-end gap-2">
+                        <button className="btn btn-ghost" onClick={() => openEdit(client)}>
+                          {t('clients.edit')}
+                        </button>
+                        <button className="btn btn-ghost" onClick={() => openPayment(client)}>
+                          {t('clients.addPayment')}
+                        </button>
+                        <button className="btn btn-danger" onClick={() => deleteMutation.mutate(client.id)}>
+                          {t('clients.delete')}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {tableRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-5 py-14 text-center">
+                      <p className="text-sm font-semibold text-ink-900">{t('clients.empty')}</p>
+                      <button className="btn btn-accent mt-4" onClick={openCreate}>
+                        + {t('clients.new')}
+                      </button>
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

@@ -6,10 +6,11 @@ export default function NotFoundPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="card p-8 text-center">
-        <h1 className="text-3xl font-display text-ink-900">{t('notfound.title')}</h1>
-        <p className="text-sm text-slate-400 mt-2">{t('notfound.subtitle')}</p>
-        <Link className="btn btn-primary mt-6 inline-flex" to="/dashboard">
+      <div className="card p-10 text-center max-w-md animate-fade-up">
+        <p className="font-display text-6xl tracking-tight text-brand-500">404</p>
+        <h1 className="text-2xl font-display text-ink-900 mt-4 tracking-tight">{t('notfound.title')}</h1>
+        <p className="text-sm text-slate-500 mt-2">{t('notfound.subtitle')}</p>
+        <Link className="btn btn-accent mt-7 inline-flex" to="/dashboard">
           {t('notfound.cta')}
         </Link>
       </div>
